@@ -1,0 +1,20 @@
+{# Campos de clave compartidos por "Cifrar" y "Modo didáctico". Requiere #metodo en el formulario. #}
+<div data-metodos="cesar">
+  <label for="desplazamiento">Desplazamiento (puede ser negativo)</label>
+  <input type="number" id="desplazamiento" name="desplazamiento" value="{{ form.desplazamiento }}">
+</div>
+
+<div data-metodos="sustitucion">
+  <label for="alfabeto">Alfabeto de sustitución (permutación de las 27 letras A-Z con Ñ)</label>
+  <div class="fila-input">
+    <input type="text" id="alfabeto" name="alfabeto" value="{{ form.alfabeto }}"
+           placeholder="Ej.: QWERTYUIOPASDFGHJKLÑZXCVBN" autocomplete="off" spellcheck="false">
+    <button type="submit" name="accion" value="aleatorio" class="secundario">Generar aleatorio</button>
+  </div>
+</div>
+
+<div data-metodos="vigenere transposicion">
+  <label for="clave">Clave (palabra)</label>
+  <input type="text" id="clave" name="clave" value="{{ form.clave }}"
+         placeholder="Ej.: LIMON" autocomplete="off" spellcheck="false">
+</div>

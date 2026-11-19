@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}CriptoClásico{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="cabecera">
+    <h1>CriptoClásico</h1>
+    <p>Laboratorio de cifrado clásico y criptoanálisis</p>
+  </header>
+
+  <nav class="pestanas" aria-label="Secciones">
+    {% for p in pestanas %}
+      {% if p.url %}
+        <a href="{{ p.url }}" class="{{ 'activa' if p.endpoint == pestana_activa else '' }}">{{ p.titulo }}</a>
+      {% else %}
+        <span class="deshabilitada" title="Disponible en la parte 6B">{{ p.titulo }}</span>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  <main class="contenido">
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer class="pie">
+    Herramienta educativa. Los cifrados clásicos no protegen información real.
+  </footer>
+  <script src="{{ url_for('static', filename='campos.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

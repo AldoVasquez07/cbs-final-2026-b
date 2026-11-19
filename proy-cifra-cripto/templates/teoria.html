@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titulo %}Teoría · CriptoClásico{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta">
+  <h2>¿Por qué los cifrados clásicos son vulnerables?</h2>
+  {% for s in secciones %}
+    <h3 class="subtitulo">{{ s.titulo }}</h3>
+    {% for p in s.parrafos %}<p>{{ p }}</p>{% endfor %}
+  {% endfor %}
+</section>
+
+<section class="tarjeta">
+  <h2>Cifrado clásico vs. cifrado moderno</h2>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead><tr><th>Característica</th><th>Clásico</th><th>Moderno</th></tr></thead>
+      <tbody>
+        {% for fila in tabla %}
+        <tr><td><strong>{{ fila[0] }}</strong></td><td>{{ fila[1] }}</td><td>{{ fila[2] }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block titulo %}Modo didáctico · CriptoClásico{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta">
+  <h2>Modo didáctico: un carácter paso a paso</h2>
+  <p class="ayuda">Elige un método y una posición del texto para ver cómo se cifra exactamente esa letra.</p>
+
+  {% if error %}<div class="alerta" role="alert">{{ error }}</div>{% endif %}
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('didactico') }}">
+    <label for="texto">Texto de entrada</label>
+    <textarea id="texto" name="texto" rows="3">{{ form.texto }}</textarea>
+
+    <div class="fila">
+      <div>
+        <label for="metodo">Método</label>
+        <select id="metodo" name="metodo">
+          {% for clave, nombre in metodos.items() %}
+            <option value="{{ clave }}" {{ 'selected' if form.metodo == clave }}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="posicion">Posición de la letra (1 = primera)</label>
+        <input type="number" id="posicion" name="posicion" min="1" value="{{ form.posicion }}">
+      </div>
+    </div>
+
+    {% include "_campos_clave.html" %}
+
+    <div class="acciones">
+      <button type="submit" name="accion" value="ant" class="secundario">← Letra anterior</button>
+      <button type="submit" name="accion" value="mostrar">Explicar</button>
+      <button type="submit" name="accion" value="sig" class="secundario">Letra siguiente →</button>
+    </div>
+  </form>
+</section>
+
+{% if didactico %}
+{% set d = didactico %}
+<section class="tarjeta">
+  <h2>{{ d.explicacion.metodo }}: letra '{{ d.explicacion.entrada }}'</h2>
+
+  <p class="ayuda">Letra {{ d.pos }} de {{ d.total }} del texto normalizado:</p>
+  <p class="tira">{% if d.recortado_izq %}…{% endif %}{% for ch, activa in d.letras %}{% if activa %}<mark>{{ ch }}</mark>{% else %}{{ ch }}{% endif %}{% endfor %}{% if d.recortado_der %}…{% endif %}</p>
+
+  <ol class="pasos">
+    {% for p in d.explicacion.pasos %}
+      <li><span class="mono-pre">{{ p }}</span></li>
+    {% endfor %}
+  </ol>
+
+  <p class="acierto">
+    {% if d.es_posicion %}
+      La letra '{{ d.explicacion.entrada }}' termina en la posición <strong>{{ d.explicacion.resultado }}</strong> del texto cifrado (contando desde 0).
+    {% else %}
+      '{{ d.explicacion.entrada }}' se cifra como <strong>{{ d.explicacion.resultado }}</strong>.
+    {% endif %}
+  </p>
+</section>
+{% endif %}
+{% endblock %}

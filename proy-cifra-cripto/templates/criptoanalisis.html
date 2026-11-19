@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block titulo %}Criptoanálisis · CriptoClásico{% endblock %}
+
+{% block contenido %}
+<form method="post" enctype="multipart/form-data" action="{{ url_for('criptoanalisis') }}">
+
+<section class="tarjeta">
+  <h2>Criptoanálisis</h2>
+  <p class="ayuda">Pega un texto cifrado sin conocer la clave y elige el tipo de ataque.</p>
+
+  {% if error %}<div class="alerta" role="alert">{{ error }}</div>{% endif %}
+
+  <label for="texto">Texto cifrado</label>
+  <textarea id="texto" name="texto" rows="5">{{ form.texto }}</textarea>
+
+  <label for="archivo">…o carga un archivo .txt</label>
+  <input type="file" id="archivo" name="archivo" accept=".txt,text/plain">
+
+  <div class="fila">
+    <div>
+      <label for="metodo">Ataque</label>
+      <select id="metodo" name="metodo">
+        <option value="cesar" {{ 'selected' if form.metodo == 'cesar' }}>César: probar los 27 desplazamientos</option>
+        <option value="vigenere" {{ 'selected' if form.metodo == 'vigenere' }}>Vigenère: longitud y clave</option>
+        <option value="sustitucion" {{ 'selected' if form.metodo == 'sustitucion' }}>Sustitución: sugerencia y ajuste manual</option>
+      </select>
+    </div>
+    <div data-metodos="vigenere">
+      <label for="longitud">Longitud de clave (vacío = usar la sugerida)</label>
+      <input type="number" id="longitud" name="longitud" min="1" max="40" value="{{ form.longitud }}">
+    </div>
+  </div>
+
+  <label for="referencia">Texto original de referencia (opcional, para medir el % de acierto)</label>
+  <textarea id="referencia" name="referencia" rows="3">{{ form.referencia }}</textarea>
+
+  <input type="hidden" name="correcciones" value="{{ form.correcciones }}">
+  <div class="acciones"><button type="submit" name="accion" value="analizar">Analizar</button></div>
+</section>
+
+{% if res %}
+<section class="tarjeta">
+  <h2>Resultado del ataque</h2>
+
+  {% if res.tipo == 'cesar' %}
+    <p>Mejor desplazamiento: <strong>{{ res.mejor.desplazamiento }}</strong>
+       (clave <strong>{{ res.mejor.clave_letra }}</strong>, chi² {{ res.mejor.chi2 }}).
+       Menor chi² significa que el texto se parece más al español.</p>
+    <h3>Texto descifrado con el mejor desplazamiento</h3>
+    <pre class="texto salida">{{ res.mejor.texto }}</pre>
+
+    <h3>Los 27 candidatos, del mejor al peor</h3>
+    <div class="tabla-scroll">
+      <table class="tabla">
+        <thead><tr><th>#</th><th>Desplaz.</th><th>Letra</th><th>Chi²</th><th>Vista previa</th></tr></thead>
+        <tbody>
+          {% for x in res.candidatos %}
+          <tr class="{{ 'mejor' if loop.first }}">
+            <td>{{ loop.index }}</td><td>{{ x.desplazamiento }}</td><td>{{ x.clave_letra }}</td>
+            <td>{{ x.chi2 }}</td><td class="mono">{{ x.vista }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% elif res.tipo == 'vigenere' %}
+    <p>Longitud sugerida: <strong>{{ res.sugerida }}</strong>
+       {% if res.usada != res.sugerida %}· longitud usada: <strong>{{ res.usada }}</strong>{% endif %}.
+       Clave recuperada: <strong class="mono">{{ res.clave }}</strong>.</p>
+    <p class="ayuda">Un índice cercano a {{ res.ic_es }} indica que las columnas son españolas (longitud correcta);
+       cerca de {{ res.ic_azar }} indica mezcla. Los múltiplos de la longitud real también dan valores altos.
+       Con textos cortos la estimación es poco fiable.</p>
+
+    <h3>Índice de coincidencia promedio por longitud</h3>
+    <div class="barras">
+      {% for r in res.tabla %}
+      <div class="barra-fila {{ 'elegida' if r.elegida }}">
+        <span class="barra-etq">{{ r.longitud }}</span>
+        <span class="barra-pista"><span class="barra-relleno" style="width: {{ r.ancho }}%"></span></span>
+        <span class="barra-val">{{ '%.4f'|format(r.ic_promedio) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h3>Texto descifrado con la clave recuperada</h3>
+    <pre class="texto salida">{{ res.descifrado }}</pre>
+
+  {% else %}
+    {% if res.error_local %}<div class="alerta" role="alert">{{ res.error_local }}</div>{% endif %}
+    <p class="ayuda">Punto de partida: las letras del cifrado se emparejan con las del español por orden de
+      frecuencia. Corrige letras a mano: al fijar un par, la letra plana que ya estaba usada se intercambia
+      con la otra, y los pares fijados quedan bloqueados.</p>
+
+    <h3>Texto descifrado con el mapeo actual</h3>
+    <pre class="texto salida">{{ res.descifrado }}</pre>
+
+    <h3>Mapeo (cifrada → plana), de más a menos frecuente</h3>
+    <div class="grid-mapeo">
+      {% for t in res.celdas %}
+      <div class="celda {{ 'fijada' if t.fijada }}" title="{{ t.conteo }} apariciones">
+        <span class="cif">{{ t.cifrada }}</span><span class="flecha">→</span><span class="pla">{{ t.plana }}</span>
+        <small>{{ t.conteo }}</small>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h3>Corregir una letra</h3>
+    <div class="fila-input">
+      <input type="text" name="corr_cifrada" maxlength="2" placeholder="Letra cifrada" aria-label="Letra cifrada" autocomplete="off">
+      <input type="text" name="corr_plana" maxlength="2" placeholder="Letra plana" aria-label="Letra plana" autocomplete="off">
+      <button type="submit" name="accion" value="fijar">Fijar</button>
+      <button type="submit" name="accion" value="reiniciar" class="secundario">Reiniciar</button>
+    </div>
+
+    {% if res.correcciones %}
+    <h3>Correcciones fijadas</h3>
+    <div class="etiquetas">
+      {% for a, b in res.correcciones %}
+        <button type="submit" name="accion" value="quitar:{{ a }}" class="etiqueta" title="Quitar esta corrección">{{ a }} → {{ b }} ✕</button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h3>Alfabeto de sustitución resultante</h3>
+    <pre class="texto">{{ res.alfabeto }}</pre>
+    <p class="ayuda">Es el formato de la pestaña Cifrar / Descifrar: pégalo allí con "Descifrar" para obtener este mismo texto.</p>
+  {% endif %}
+
+  {% if res.acierto %}
+    <h3>Acierto contra el texto de referencia</h3>
+    <p class="acierto"><strong>{{ res.acierto.porcentaje }} %</strong>
+       ({{ res.acierto.correctas }} de {{ res.acierto.total }} letras correctas)</p>
+    <pre class="texto alineado">{% for l in res.alineado %}REF {{ l.ref }}
+DES {{ l.des }}
+    {{ l.marcas }}
+{% if not loop.last %}
+{% endif %}{% endfor %}</pre>
+    <p class="ayuda">Bajo cada línea, "|" marca una letra correcta y "." una incorrecta.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+</form>
+{% endblock %}

@@ -1,12 +1,3 @@
-"""
-CriptoClásico - Etapa 5: modo didáctico.
-
-Requisitos cubiertos:
-  14 - Mostrar paso a paso el cifrado de un carácter.
-  15 - Explicación de por qué los cifrados clásicos son vulnerables al análisis
-       de frecuencia y qué los diferencia del cifrado moderno.
-"""
-
 import math
 
 from ciphers import (ALFABETO, INDICE, N, normalizar_texto, validar_alfabeto_sustitucion,

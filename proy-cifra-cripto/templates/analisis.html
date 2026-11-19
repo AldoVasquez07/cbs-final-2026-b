@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titulo %}Análisis de frecuencia · CriptoClásico{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta">
+  <h2>Análisis de frecuencia</h2>
+  <p class="ayuda">Cuenta cuántas veces aparece cada letra y la compara con la frecuencia esperada en español.
+    Sirve para decidir qué tipo de cifrado se usó antes de atacarlo.</p>
+
+  {% if error %}<div class="alerta" role="alert">{{ error }}</div>{% endif %}
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('analisis') }}">
+    <label for="texto">Texto a analizar (cifrado o plano)</label>
+    <textarea id="texto" name="texto" rows="6">{{ form.texto }}</textarea>
+
+    <label for="archivo">…o carga un archivo .txt</label>
+    <input type="file" id="archivo" name="archivo" accept=".txt,text/plain">
+
+    <label class="radio">
+      <input type="checkbox" name="comparar" value="1" {{ 'checked' if form.comparar }}>
+      Superponer la frecuencia esperada del español
+    </label>
+
+    <div class="acciones"><button type="submit">Analizar</button></div>
+  </form>
+</section>
+
+{% if datos %}
+<section class="tarjeta">
+  <h2>Resultados</h2>
+
+  <div class="estadisticas">
+    <div class="chip"><span>Letras analizadas</span><strong>{{ datos.n_letras }}</strong></div>
+    <div class="chip"><span>Letras distintas</span><strong>{{ datos.distintas }} / 27</strong></div>
+    <div class="chip"><span>Índice de coincidencia</span><strong>{{ datos.ic }}</strong></div>
+    <div class="chip"><span>Chi² vs. español</span><strong>{{ datos.chi2 }}</strong></div>
+  </div>
+  <p class="ayuda">Referencias del índice de coincidencia: español ≈ {{ ic_es }}, texto aleatorio ≈ {{ ic_azar }}.</p>
+  <p class="interpretacion">{{ datos.interpretacion }}</p>
+
+  <h3>Histograma</h3>
+  <img class="histograma" src="data:image/png;base64,{{ datos.imagen }}"
+       alt="Histograma de frecuencia de letras del texto, comparado con el español">
+
+  <h3>Comparación letra por letra</h3>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr><th>Letra</th><th>Conteo</th><th>Observada (%)</th><th>Esperada (%)</th><th>Diferencia</th></tr>
+      </thead>
+      <tbody>
+        {% for f in datos.tabla %}
+        <tr class="{{ 'alta' if f.diferencia > 2 or f.diferencia < -2 }}">
+          <td><strong>{{ f.letra }}</strong></td>
+          <td>{{ f.conteo }}</td>
+          <td>{{ '%.2f'|format(f.observada) }}</td>
+          <td>{{ '%.2f'|format(f.esperada) }}</td>
+          <td>{{ '%+.2f'|format(f.diferencia) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="ayuda">Las filas resaltadas se alejan más de 2 puntos porcentuales de lo esperado.</p>
+</section>
+{% endif %}
+{% endblock %}

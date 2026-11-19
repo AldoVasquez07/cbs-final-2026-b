@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block titulo %}Cifrar / Descifrar · CriptoClásico{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta">
+  <h2>Cifrar o descifrar un mensaje</h2>
+
+  {% if error %}
+    <div class="alerta" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('cifrar') }}">
+
+    <label for="texto">Texto de entrada</label>
+    <textarea id="texto" name="texto" rows="6"
+      placeholder="Escribe o pega tu mensaje. Se normaliza solo: mayúsculas, sin tildes ni espacios.">{{ form.texto }}</textarea>
+
+    <label for="archivo">…o carga un archivo .txt (tiene prioridad sobre el cuadro de texto)</label>
+    <input type="file" id="archivo" name="archivo" accept=".txt,text/plain">
+
+    <div class="fila">
+      <div>
+        <label for="metodo">Método</label>
+        <select id="metodo" name="metodo">
+          {% for clave, nombre in metodos.items() %}
+            <option value="{{ clave }}" {{ 'selected' if form.metodo == clave }}>{{ nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <fieldset class="operacion">
+        <legend>Operación</legend>
+        <label class="radio"><input type="radio" name="operacion" value="cifrar" {{ 'checked' if form.operacion == 'cifrar' }}> Cifrar</label>
+        <label class="radio"><input type="radio" name="operacion" value="descifrar" {{ 'checked' if form.operacion == 'descifrar' }}> Descifrar</label>
+      </fieldset>
+    </div>
+
+    {% include "_campos_clave.html" %}
+
+    <label class="radio">
+      <input type="checkbox" name="bloques" value="1" {{ 'checked' if form.bloques }}>
+      Mostrar el resultado en bloques de 5 letras
+    </label>
+
+    <div class="acciones">
+      <button type="submit" name="accion" value="procesar">Ejecutar</button>
+      <button type="submit" name="accion" value="descargar" class="secundario">Ejecutar y descargar .txt</button>
+    </div>
+  </form>
+</section>
+
+{% if resultado is not none %}
+<section class="tarjeta">
+  <h2>Resultado</h2>
+  <p class="meta">{{ encabezado }}</p>
+
+  <h3>Texto normalizado de entrada</h3>
+  <pre class="texto">{{ normalizado }}</pre>
+
+  <h3>Salida</h3>
+  <pre class="texto salida">{{ resultado }}</pre>
+</section>
+{% endif %}
+{% endblock %}
